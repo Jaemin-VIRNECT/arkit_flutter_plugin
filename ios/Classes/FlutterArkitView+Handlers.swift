@@ -179,6 +179,16 @@ extension FlutterArkitView {
     let arHitResults = getARHitResultsArray(sceneView, atLocation: location)
     result(arHitResults)
   }
+
+  func onPerformCenterHitTest(_ result:FlutterResult) {
+    let arHitResult = getCenterPosition(sceneView)
+    if(arHitResult == nil){
+        result(nil)
+    } else {
+        let res = serializeVector(arHitResult!)
+        result(res)
+    }
+  }
   
   func onGetLightEstimate(_ result: FlutterResult) {
     let frame = sceneView.session.currentFrame

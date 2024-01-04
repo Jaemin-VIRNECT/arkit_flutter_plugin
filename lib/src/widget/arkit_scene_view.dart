@@ -341,6 +341,12 @@ class ARKitController {
         'removeARKitAnchor', {'anchorIdentifier': anchorIdentifier});
   }
 
+  /// Perform Center Hit Test
+  Future<Vector3?> performCenterHitTest() async {
+    final result = await _channel.invokeListMethod('performCenterHitTest');
+    return result != null ? _vector3Converter.fromJson(result) : null;
+  }
+
   /// Perform Hit Test
   /// defaults to center of the screen.
   /// x and y values are between 0 and 1

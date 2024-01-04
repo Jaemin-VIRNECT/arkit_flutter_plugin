@@ -134,17 +134,17 @@ private func createGltfNode(_ dict: [String: Any], channel: FlutterMethodChannel
       let scaleValue = 0.15 / abs(minX - maxX)
 
       scene.rootNode.scale = SCNVector3(scaleValue, scaleValue, scaleValue)
-        
+
       for child in scene.rootNode.childNodes {
         node.addChildNode(child.flattenedClone())
       }
-      
+
       if let name = dict["name"] as? String {
         node.name = name
       }
-      if let transform = dict["transform"] as? [NSNumber] {
-        node.transform = deserializeMatrix4(transform)
-      }
+//       if let transform = dict["transform"] as? [NSNumber] {
+//         node.transform = deserializeMatrix4(transform)
+//       }
     } catch {
       logPluginError("Failed to load file: \(error.localizedDescription)", toChannel: channel)
     }

@@ -73,6 +73,8 @@ class FlutterArkitView: NSObject, FlutterPlatformView {
     case "updateMaterials":
       onUpdateMaterials(arguments!)
       result(nil)
+    case "performCenterHitTest":
+      onPerformCenterHitTest(result)
     case "performHitTest":
       onPerformHitTest(arguments!, result)
     case "updateFaceGeometry":
