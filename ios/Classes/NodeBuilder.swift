@@ -128,6 +128,13 @@ private func createGltfNode(_ dict: [String: Any], channel: FlutterMethodChannel
       }
       let scene = try sceneSource.scene()
       
+      let minX = scene.rootNode.boundingBox.min.x
+      let maxX = scene.rootNode.boundingBox.max.x
+        
+      let scaleValue = 0.15 / abs(minX - maxX)
+
+      scene.rootNode.scale = SCNVector3(scaleValue, scaleValue, scaleValue)
+        
       for child in scene.rootNode.childNodes {
         node.addChildNode(child.flattenedClone())
       }
