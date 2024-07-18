@@ -70,37 +70,32 @@ fileprivate func createSCNLineNode(_ dict: Dictionary<String, Any>) -> SCNNode {
     return node
 }
 
-func updateLineNode(_ sceneView: ARSCNView, _ node: SCNLineNode, fromDict dict: Dictionary<String, Any>, channel: FlutterMethodChannel) {
-    let x = dict["x"] as! Double
-    let y = dict["y"] as! Double
-    let touchPoint = CGPoint(x: x, y: y);
-    var floorNode = sceneView.pointOfView?.childNode(withName: "floorNode", recursively: false)
-    if(floorNode == nil){
-        floorNode = SCNNode(geometry: SCNFloor())
-        floorNode!.name = "floorNode"
-        floorNode!.isHidden = true
-        sceneView.pointOfView?.addChildNode(floorNode!)
-        floorNode!.position.z = -0.5
-        floorNode!.eulerAngles.x = -.pi / 2
-    }
-    guard let lastHit = sceneView.hitTest(touchPoint, options: [
-        SCNHitTestOption.rootNode: floorNode!, SCNHitTestOption.ignoreHiddenNodes: false
-    ]).first else {
-        logPluginError("Failed to get HitTestResult", toChannel: channel)
+func updateLineNode(_ sceneView: ARSCNView, _ node: SCNLineNode, fromDict dict: [String: Any], channel: FlutterMethodChannel) {
+    guard let x = dict["x"] as? Double, let y = dict["y"] as? Double else {
+        logPluginError("Invalid touch coordinates", toChannel: channel)
         return
     }
-    
-    let worldCoordinates = lastHit.worldCoordinates
-    var lastPoint = SCNVector3Zero
-    if(!node.points.isEmpty){
-        lastPoint = node.points.last!
-    }
-    
-    let diff = SCNVector3(worldCoordinates.x - lastPoint.x, worldCoordinates.y - lastPoint.y, worldCoordinates.z - lastPoint.z)
-    let distance = sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z)
-    print("distance : " + String(distance))
-    if distance > 0.012 {
-        node.add(point: worldCoordinates)
+    let touchPoint = CGPoint(x: x, y: y)
+    if(node.points.isEmpty){
+        var types = ARHitTestResult.ResultType([.featurePoint])
+        let hitResults = sceneView.hitTest(touchPoint, types: types)
+        guard let hitResult = hitResults.first else {
+            logPluginError("No hit result found", toChannel: channel)
+            return
+        }
+        let worldTransform = hitResult.worldTransform
+        let worldCoordinates = SCNVector3(worldTransform.columns.3.x, worldTransform.columns.3.y, worldTransform.columns.3.z)
+        node.add(point: SCNVector3(worldCoordinates.x, worldCoordinates.y, worldCoordinates.z))
+    } else {
+        guard let initialPoint = node.points.first else { return }
+        guard let lastPoint = node.points.last else { return }
+        let projectedPoint = sceneView.projectPoint(initialPoint)
+        let unprojectedPoint = sceneView.unprojectPoint(SCNVector3(Float(touchPoint.x), Float(touchPoint.y), projectedPoint.z))
+        let diff = SCNVector3(unprojectedPoint.x - lastPoint.x, unprojectedPoint.y - lastPoint.y, unprojectedPoint.z - lastPoint.z)
+        let distance = sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z)
+        if distance > 0.012 {
+            node.add(point: unprojectedPoint)
+        }
     }
 }
 
